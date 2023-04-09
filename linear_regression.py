@@ -6,7 +6,7 @@ from IPython.display import clear_output
 from six.moves import urllib
 import tensorflow as tf
 import tensorflow.python.feature_column as fc
-
+from input_function import make_input_fn
 
 # load data
 df_train = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/train.csv')  # training data
@@ -45,3 +45,24 @@ for feature_name in NUMERIC_COLUMNS:
         feature_name, dtype=tf.float32))
 
 print(feature_columns)
+
+train_input_fn = make_input_fn(df_train, y_train)  # training
+
+eval_input_fn = make_input_fn(df_eval, y_eval, num_epochs=1, shuffle=False)  # testing
+
+
+linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns)
+
+linear_est.train(train_input_fn)
+
+result = linear_est.evaluate(eval_input_fn)
+
+clear_output()
+
+print(result['accuracy'])
+
+# predict
+result = list(linear_est.predict(eval_input_fn))
+print(df_eval.loc[0])
+print(y_eval.loc[0])
+print(result[0]['probabilities'][0])
